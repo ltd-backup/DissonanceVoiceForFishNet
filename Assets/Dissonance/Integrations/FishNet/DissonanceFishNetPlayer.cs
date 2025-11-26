@@ -1,7 +1,5 @@
 using System;
 using System.Collections;
-using Dissonance;
-using Dissonance.Integrations.FishNet;
 using Dissonance.Integrations.FishNet.Utils;
 using FishNet.Connection;
 using FishNet.Object;
@@ -102,9 +100,15 @@ namespace Dissonance.Integrations.FishNet
 
         private void OnSyncedPlayerNameUpdated(string _, string updatedName, bool __)
         {
-            if (string.IsNullOrEmpty(updatedName) || updatedName.Equals(PlayerId, StringComparison.Ordinal))
+            if (string.IsNullOrEmpty(updatedName))
             {
-                Debug.LogWarning("[DissonanceFishNetPlayer] Received empty player name update!");
+                Debug.LogWarning("[DissonanceFishNetPlayer] Received empty player name update, ignoring.");
+                return;
+            }
+
+            if (updatedName.Equals(PlayerId, StringComparison.OrdinalIgnoreCase))
+            {
+                Debug.LogWarning("[DissonanceFishNetPlayer] Player name unchanged, ignoring.");
                 return;
             }
 
