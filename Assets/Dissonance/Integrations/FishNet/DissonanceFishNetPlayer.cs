@@ -22,8 +22,8 @@ namespace Dissonance.Integrations.FishNet
 
         public string _cachedPlayerId;
         public string PlayerId => _cachedPlayerId ??= _syncedPlayerName.Value;
-        public Vector3 Position => trackingTransform.position;
-        public Quaternion Rotation => trackingTransform.rotation;
+        public Vector3 Position => trackingTransform != null ? trackingTransform.position : Vector3.zero;
+        public Quaternion Rotation => trackingTransform != null ? trackingTransform.rotation : Quaternion.identity;
         public NetworkPlayerType Type => IsOwner ? NetworkPlayerType.Local : NetworkPlayerType.Remote;
 
         public bool IsTracking { get; private set; }
