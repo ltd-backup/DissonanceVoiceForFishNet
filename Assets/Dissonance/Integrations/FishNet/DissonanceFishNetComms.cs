@@ -83,6 +83,7 @@ namespace Dissonance.Integrations.FishNet
             {
                 NetworkManager.ServerManager.OnServerConnectionState += ServerManagerOnOnServerConnectionState;
                 NetworkManager.ClientManager.OnClientConnectionState += ClientManagerOnOnClientConnectionState;
+                NetworkManager.ClientManager.OnAuthenticated += ClientManagerOnAuthenticated;
 
                 _subscribed = true;
             }
@@ -90,6 +91,7 @@ namespace Dissonance.Integrations.FishNet
             {
                 NetworkManager.ServerManager.OnServerConnectionState -= ServerManagerOnOnServerConnectionState;
                 NetworkManager.ClientManager.OnClientConnectionState -= ClientManagerOnOnClientConnectionState;
+                NetworkManager.ClientManager.OnAuthenticated -= ClientManagerOnAuthenticated;
 
                 _subscribed = false;
             }
@@ -105,6 +107,15 @@ namespace Dissonance.Integrations.FishNet
         private void ServerManagerOnOnServerConnectionState(ServerConnectionStateArgs obj)
         {
             OnFishNetStateDirty(obj.ConnectionState);
+        }
+        private void ClientManagerOnAuthenticated()
+        {
+            // Since Dissonance has been modified to not start before the client is authenticated,
+            // Adjust Dissonance running mode again in this client authentication callback.
+
+            // Ignore if is Server or Host, as it has already started.
+            if (NetworkManager.ServerManager.Started == false)
+                AdjustDissonanceRunningMode();
         }
 
         private void OnFishNetStateDirty(LocalConnectionState state)
@@ -150,9 +161,14 @@ namespace Dissonance.Integrations.FishNet
                 LoggingHelper.RunningAs(_currentNetworkMode);
             }
             
-            // If client only & dirty, stop client
+            // If client only & dirty, start dissonance
             else if(NetworkManager.ClientManager.Started)
             {
+                // Do not start Dissonance before the client is authenticated.
+                // Otherwise, Dissonance will call Broadcast before authentication,
+                // And the server will kick the client.
+                if (NetworkManager.ClientManager.Connection.IsAuthenticated == false) return;
+
                 if (_currentNetworkMode == NetworkMode.Client) return;
 
                 _currentNetworkMode = NetworkMode.Client;
